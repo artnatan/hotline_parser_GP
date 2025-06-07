@@ -2,7 +2,7 @@
 
 A Django-based web application that monitors prices for Nova Tec water heaters listed on [hotline.ua](https://hotline.ua), compares them to the official Recommended Retail Price (RRP), and displays results in a dashboard with color-coded indicators.
 
-![Preview Screenshot](screenshots\demo.png)
+![Preview Screenshot](screenshots/demo.png)
 
 ---
 
