@@ -1,0 +1,123 @@
+{% comment %}
+Copyright 2025 Calabaraburus (Artem Natalchishin)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+{% endcomment %}
+
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Hotline Моніторинг</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+        }
+        .tabs {
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            margin-right: 5px;
+            border: none;
+            cursor: pointer;
+            background-color: #eee;
+        }
+        .tab-btn.active {
+            background-color: #ccc;
+            font-weight: bold;
+        }
+        .model-tab {
+            display: none;
+        }
+        .model-tab.active {
+            display: block;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f5f5f5;
+        }
+        .low {
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+        .high {
+            background-color: rgba(0, 150, 255, 0.1);
+        }
+        .ok {
+            background-color: rgba(0, 200, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tabs">
+        {% for model in data %}
+            <button class="tab-btn {% if forloop.first %}active{% endif %}" onclick="showTab('{{ model|slugify }}')">{{ model }}</button>
+        {% endfor %}
+    </div>
+
+    {% for model, content in data.items %}
+        <div class="model-tab {% if forloop.first %}active{% endif %}" id="{{ model|slugify }}">
+            <h2>{{ model }} (РРЦ: {{ content.rrp }} грн)</h2>
+            <table>
+                <tr>
+                    <th>Магазин</th>
+                    <th>Ціна</th>
+                    <th>Відхилення</th>
+                    <th>Ссилка</th>
+                </tr>
+                {% for offer in content.offers %}
+                {% with deviation=offer.price|floatformat:2 %}
+                {% with percent_diff=deviation|floatformat:"2"|add:"-{{ content.rrp }}"|floatformat:"2"|floatformat:"2" %}
+                <tr class="{% if offer.price < content.rrp %}low{% elif offer.price > content.rrp %}high{% else %}ok{% endif %}">
+                    <td>{{ offer.shop_name }}</td>
+                    <td>{{ offer.price }} грн</td>
+                    <td>
+                        {% widthratio offer.price content.rrp 100 as pct %}
+                        {% widthratio content.rrp content.rrp 100 as base %}
+                        {% with diff=pct|add:"-100" %}
+                            {% if diff > 0 %}
+                                +{{ diff|floatformat:1 }}%
+                            {% else %}
+                                {{ diff|floatformat:1 }}%
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+                    <td><a href="{{ offer.shop_url }}" target="_blank">посилання</a></td>
+                </tr>
+                {% endwith %}
+                {% endwith %}
+                {% endfor %}
+            </table>
+
+        </div>
+    {% endfor %}
+
+    <script>
+        function showTab(id) {
+            document.querySelectorAll('.model-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            document.querySelector(`.tab-btn[onclick="showTab('${id}')"]`).classList.add('active');
+        }
+    </script>
+</body>
+</html>
